@@ -8,7 +8,7 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:background="@color/deepPurple4"
+        android:background="@color/color4"
         android:textColor="@color/white"
         android:id="@+id/btnAdd"
         android:onClick="btnAddOnClick"
@@ -18,7 +18,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/main_list_view"
-        android:cacheColorHint="@color/deepPurple1">
+        android:cacheColorHint="@color/color1">
     </ListView>
 
 </LinearLayout>
