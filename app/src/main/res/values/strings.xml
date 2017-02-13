@@ -1,3 +1,7 @@
 <resources>
-    <string name="app_name">TryLogiXS</string>
+    <string name="app_name">LogiXS</string>
+    <string name="action_settings">Settings</string>
+    <string name="add_image">Add Image</string>
+    <string name="title_activity_display_image">Display Image</string>
+    <string name="image_information">Image Information</string>
 </resources>
