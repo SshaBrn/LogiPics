@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:background="@color/color5"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:layout_height="fill_parent">
+
+    <Button
+        android:onClick="clearDbList()"
+        android:id="@+id/btnClear"
+        android:background="@color/color4"
+        android:textColor="@color/black"
+        android:layout_centerHorizontal="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:width="250dp"
+        android:text="Delete All Cached Images"/>
+
+    <Button
+        android:onClick="editDbList(0)"
+        android:id="@+id/btnDel0"
+        android:background="@color/color1"
+        android:textColor="@color/color5"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/btnClear"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:width="250dp"
+        android:text="Delete First Image"/>
+
+    <Button
+        android:onClick="editDbList(1)"
+        android:id="@+id/btnDel1"
+        android:background="@color/color1"
+        android:textColor="@color/color5"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/btnDel0"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:width="250dp"
+        android:text="Delete Second Image"/>
+
+    <Button
+        android:onClick="editDbList(2)"
+        android:id="@+id/btnDel2"
+        android:background="@color/color1"
+        android:textColor="@color/color5"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/btnDel1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:width="250dp"
+        android:text="Delete Third Image"/>
+
+    <Button
+        android:onClick="editDbList(3)"
+        android:id="@+id/btnDel3"
+        android:background="@color/color1"
+        android:textColor="@color/color5"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/btnDel2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:width="250dp"
+        android:text="Delete Fourth Image"/>
+
+    <Button
+        android:onClick="editDbList(4)"
+        android:id="@+id/btnDel4"
+        android:background="@color/color1"
+        android:textColor="@color/color5"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/btnDel3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:width="250dp"
+        android:text="Delete Latest Image"/>
+
+    <Button
+        android:onClick="btnExitClicked"
+        android:id="@+id/btnExit1"
+        android:background="@color/color4"
+        android:textColor="@color/black"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/btnDel4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:width="250dp"
+        android:text="Exit"/>
+</RelativeLayout>
