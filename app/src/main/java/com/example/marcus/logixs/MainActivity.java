@@ -13,6 +13,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -37,7 +38,7 @@ public class MainActivity extends ActionBarActivity {
     private List dbList;
     private ImageAdapter imageAdapter;
     private ListView listView;
-    private TextView printList;
+    private EditText printList;
     private Uri mCapturedImageURI;
     private static final int RESULT_LOAD_IMAGE = 1;
     private static final int REQUEST_IMAGE_CAPTURE = 2;
@@ -142,8 +143,8 @@ public class MainActivity extends ActionBarActivity {
                 printDialog.dismiss();
             }
         });
-        printList = (TextView) view.findViewById(R.id.textPrintList);
-        printList.setText("blablabla"); // Crashed hier !!!
+        printList = (EditText) view.findViewById(R.id.textPrintList);
+        printList.setText("blblblb", EditText.BufferType.EDITABLE); // CRASH !!!
 
         printDialog.show();
     }
