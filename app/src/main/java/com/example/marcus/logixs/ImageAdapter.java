@@ -48,7 +48,6 @@ public class ImageAdapter extends ArrayAdapter<MyImage> {
         //        viewHolder.imgIcon.setImageURI(Uri.fromFile(new File(image.getPath())));
         viewHolder.imgIcon.setImageBitmap(
                 ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(image.getPath()), THUMBSIZE, THUMBSIZE));
-
         // Return the completed view to render on screen
         return convertView;
     }

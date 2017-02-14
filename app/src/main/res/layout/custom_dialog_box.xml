@@ -23,7 +23,7 @@
     <Button
         android:onClick="btnTakePhotoClicked"
         android:id="@+id/btnTakePhoto"
-        android:background="@color/color2"
+        android:background="@color/color1"
         android:textColor="@color/color5"
         android:layout_centerHorizontal="true"
         android:layout_below="@id/btnChoosePath"
