@@ -25,14 +25,18 @@ import com.dropbox.client2.session.AppKeyPair;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends ActionBarActivity {
 
-    final static private String APP_KEY = "INSERT_APP_KEY";
-    final static private String APP_SECRET = "INSERT_APP_SECRET";
+    final static private String APP_KEY = "4ascir3u867s00m";
+    final static private String APP_SECRET = "hw0iu6nunu44gvc";
     private DropboxAPI<AndroidAuthSession> mDBApi;
     private ArrayList<MyImage> images;
     private List dbList;
@@ -132,6 +136,11 @@ public class MainActivity extends ActionBarActivity {
         Editdialog.show();
     }
 
+    // Dropbox Event Listener - Upload
+    public void btnUploadOnClick(View view) throws FileNotFoundException, DropboxException {
+        uploadImages(dbList);
+    }
+
     // Dev Console - Testing List
     public void btnPrintOnClick(View view){
         final Dialog printDialog = new Dialog(this);
@@ -144,9 +153,11 @@ public class MainActivity extends ActionBarActivity {
             }
         });
         printList = (EditText) view.findViewById(R.id.textPrintList);
-        printList.setText("blblblb", EditText.BufferType.EDITABLE); // CRASH !!!
+        //printList.setText("blblblb", EditText.BufferType.EDITABLE); // CRASH !!!
 
         printDialog.show();
+        String testString = (String) dbList.iterator().next();
+        Log.i("TestListLog2",testString);
     }
 
     /**
@@ -155,12 +166,17 @@ public class MainActivity extends ActionBarActivity {
     private void activeTakePhoto() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            String fileName = "temp.jpg";
+            Date date = Calendar.getInstance().getTime();
+            DateFormat formatter = new SimpleDateFormat("dd/MM/yyyyHH:mm:ss");
+            String today = formatter.format(date);
+            String fileName = today + ".jpg";
             ContentValues values = new ContentValues();
             values.put(MediaStore.Images.Media.TITLE, fileName);
             mCapturedImageURI = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
             takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCapturedImageURI);
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            // FILENAME TEST LOG
+            Log.i("Filename Test Log", fileName);
         }
     }
 
@@ -245,6 +261,9 @@ public class MainActivity extends ActionBarActivity {
         dbList.clear();
     }
 
+
+    // TODO: DROPBOX BACKGROUND ASYNCTASK - FUNKTIONIERT SO NICHT
+
     // Dropbox Auth start
     public void getSession(){
         mDBApi.getSession().startOAuth2Authentication(MainActivity.this);
@@ -265,7 +284,7 @@ public class MainActivity extends ActionBarActivity {
         }
     }
     // Dropbox Upload triggered by Button
-    public void uploadImages(ArrayList List) throws DropboxException, FileNotFoundException {
+    public void uploadImages(List List) throws DropboxException, FileNotFoundException {
         if(List.size() <= 5) {
             while (List.iterator().hasNext()) {
                 String filePath = (String) List.iterator().next();
@@ -273,7 +292,8 @@ public class MainActivity extends ActionBarActivity {
                 FileInputStream inputStream = new FileInputStream(file);
                 DropboxAPI.Entry response = mDBApi.putFile("/magnum-opus.txt", inputStream,
                         file.length(), null, null);
-                Log.i("DbExampleLog", "The uploaded file's rev is: " + response.rev);
+                Log.i("DbExampleLog", "The uploaded file's rev is: " + response.rev + filePath);
+
             }
         }
     }

@@ -32,6 +32,15 @@
         android:onClick="btnPrintOnClick"
         android:text="View cached Images"/>
 
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@color/color1"
+        android:textColor="@color/white"
+        android:id="@+id/btnUpload"
+        android:onClick="btnUploadOnClick"
+        android:text="Upload"/>
+
     <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
