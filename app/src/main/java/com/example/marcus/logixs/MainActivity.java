@@ -1,11 +1,14 @@
 package com.example.marcus.logixs;
 
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -13,13 +16,19 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.exception.DropboxException;
+import com.dropbox.client2.exception.DropboxFileSizeException;
+import com.dropbox.client2.exception.DropboxIOException;
+import com.dropbox.client2.exception.DropboxParseException;
+import com.dropbox.client2.exception.DropboxPartialFileException;
+import com.dropbox.client2.exception.DropboxServerException;
+import com.dropbox.client2.exception.DropboxUnlinkedException;
 import com.dropbox.client2.session.AppKeyPair;
 
 import java.io.File;
@@ -42,16 +51,21 @@ public class MainActivity extends ActionBarActivity {
     private List dbList;
     private ImageAdapter imageAdapter;
     private ListView listView;
-    private EditText printList;
+    private TextView printList;
     private Uri mCapturedImageURI;
     private static final int RESULT_LOAD_IMAGE = 1;
     private static final int REQUEST_IMAGE_CAPTURE = 2;
+    private MainActivity context;
+    private String[] pathArray;
+    private int imageCounter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //Test Context
+        context = this;
         //Dropbox
         AppKeyPair appKeys = new AppKeyPair(APP_KEY, APP_SECRET);
         AndroidAuthSession session = new AndroidAuthSession(appKeys);
@@ -67,6 +81,10 @@ public class MainActivity extends ActionBarActivity {
         dbList = Collections.synchronizedList(new ArrayList());
     }
 
+
+    // START BTN LISTENER
+
+    // Add Image Button Listener
     public void btnAddOnClick(View view) {
         final Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.custom_dialog_box);
@@ -87,8 +105,6 @@ public class MainActivity extends ActionBarActivity {
                 activeTakePhoto();
             }
         });
-
-        // show dialog on screen
         dialog.show();
     }
 
@@ -125,6 +141,7 @@ public class MainActivity extends ActionBarActivity {
             }});
         Editdialog.findViewById(R.id.btnDel4).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
+                //TODO: REFACTOR - ITS CRASHING IF INDEX IS 0 FOR EXAMPLE
                 int lastItem = dbList.size()-1;
                 editDbList(lastItem);
             }});
@@ -136,38 +153,42 @@ public class MainActivity extends ActionBarActivity {
         Editdialog.show();
     }
 
-    // Dropbox Event Listener - Upload
-    public void btnUploadOnClick(View view) throws FileNotFoundException, DropboxException {
-        uploadImages(dbList);
+    // DROPBOX Upload Button Event Listener
+    public void btnUploadOnClick(View view) {
+
+        int listSize = dbList.size();
+        Log.d("ListSize ", "SIZE: " + listSize);
+        //pathArray = new String[2];
+        int i = 0;
+        String pathArrayString = (String) dbList.iterator().next();
+        /*
+        while(dbList.iterator().hasNext()){
+            pathArray[i] = (String) dbList.iterator().next();
+            i++;
+        }*/
+            //UploadFile UpFile = new UploadFile(pathArray);
+            new UploadFile().execute(pathArrayString);
+            //UpFile.execute(pathArray);
+
+        //else {
+            //Toast.makeText(context,"Bitte genau 2 Bilder!", Toast.LENGTH_SHORT).show();
+        //}
     }
 
-    // Dev Console - Testing List
-    public void btnPrintOnClick(View view){
-        final Dialog printDialog = new Dialog(this);
-        printDialog.setContentView(R.layout.custom_print_box);
-        printDialog.setTitle("Current Dropbox List");
-        Button btnExit2 = (Button) printDialog.findViewById(R.id.btnExit2);
-        btnExit2.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                printDialog.dismiss();
-            }
-        });
-        printList = (EditText) view.findViewById(R.id.textPrintList);
-        //printList.setText("blblblb", EditText.BufferType.EDITABLE); // CRASH !!!
-
-        printDialog.show();
-        String testString = (String) dbList.iterator().next();
-        Log.i("TestListLog2",testString);
+    // DROPBOX AUTH Button Listener
+    public void btnStartAuth(View view){
+        mDBApi.getSession().startOAuth2Authentication(MainActivity.this);
     }
 
-    /**
-     * take a photo
-     */
+
+    // END BTN LISTENER
+
+    // take a photo
     private void activeTakePhoto() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             Date date = Calendar.getInstance().getTime();
-            DateFormat formatter = new SimpleDateFormat("dd/MM/yyyyHH:mm:ss");
+            DateFormat formatter = new SimpleDateFormat("ddMMyyyyHH:mm");
             String today = formatter.format(date);
             String fileName = today + ".jpg";
             ContentValues values = new ContentValues();
@@ -175,19 +196,16 @@ public class MainActivity extends ActionBarActivity {
             mCapturedImageURI = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
             takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mCapturedImageURI);
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-            // FILENAME TEST LOG
-            Log.i("Filename Test Log", fileName);
         }
     }
 
-    /**
-     * to gallery
-     */
+     // to gallery - Load Image
     private void activeGallery() {
         Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(intent, RESULT_LOAD_IMAGE);
     }
 
+    // ResultTask Load Image | Take Image
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
@@ -200,13 +218,15 @@ public class MainActivity extends ActionBarActivity {
                     int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
                     String picturePath = cursor.getString(columnIndex);
                     cursor.close();
+                    //TODO: TESTEN!
                     MyImage image = new MyImage();
-                    image.setTitle("Number");
+                    image.setTitle("" + imageCounter);
+                    imageCounter++;
                     image.setDescription("Ganz ruhig Saschi, is nur n Test");
                     image.setDatetime(System.currentTimeMillis());
                     image.setPath(picturePath);
                     if(dbList.size() <= 5){
-                    dbList.add(picturePath);}
+                        dbList.add(picturePath);}
                     images.add(image);
                 }
             case REQUEST_IMAGE_CAPTURE:
@@ -217,12 +237,13 @@ public class MainActivity extends ActionBarActivity {
                     cursor.moveToFirst();
                     String picturePath = cursor.getString(column_index_data);
                     MyImage image = new MyImage();
-                    image.setTitle("Number");
+                    image.setTitle("" + imageCounter);
+                    imageCounter++;
                     image.setDescription("Ganz ruhig Saschi, is nur n Test");
                     image.setDatetime(System.currentTimeMillis());
                     image.setPath(picturePath);
                     if(dbList.size() <= 5){
-                    dbList.add(picturePath);}
+                        dbList.add(picturePath);}
                     images.add(image);
                 }
         }
@@ -250,25 +271,30 @@ public class MainActivity extends ActionBarActivity {
     }
 
     // Edit ImageArray/dbList - Delete all / index
+    // TODO: Index Delete | ViewHolder Image Delete etc.
     public void editDbList(int ArrayIndex){
         if(dbList != null)
-        dbList.remove(ArrayIndex);
-        //images.remove(ArrayIndex); Zwecks Renderer nicht so einfach zu lösen
+            dbList.remove(ArrayIndex);
+        // TODO: images.remove(ArrayIndex); Zwecks Renderer nicht so einfach zu lösen
     }
 
+    // ----------------- Some HelpFunctions --------------------------
     // Clear dbList after Upload
     public void clearDbList(){
         dbList.clear();
     }
-
-
-    // TODO: DROPBOX BACKGROUND ASYNCTASK - FUNKTIONIERT SO NICHT
-
-    // Dropbox Auth start
-    public void getSession(){
-        mDBApi.getSession().startOAuth2Authentication(MainActivity.this);
+    // GET FileName
+    public String getFileName(){
+        Date date = Calendar.getInstance().getTime();
+        DateFormat formatter = new SimpleDateFormat("ddMMyyyyHH:mm");
+        String today = formatter.format(date);
+        String fileName = today + ".jpg";
+        return fileName;
     }
-    // Dropbox comeback after db App started
+
+    // ------------------------ END ----------------------------------
+
+    // DROPBOX Resume Function after Auth. Comeback
     protected void onResume() {
         super.onResume();
 
@@ -276,24 +302,130 @@ public class MainActivity extends ActionBarActivity {
             try {
                 // Required to complete auth, sets the access token on the session
                 mDBApi.getSession().finishAuthentication();
-
                 String accessToken = mDBApi.getSession().getOAuth2AccessToken();
             } catch (IllegalStateException e) {
                 Log.i("DbAuthLog", "Error authenticating", e);
             }
         }
     }
-    // Dropbox Upload triggered by Button
-    public void uploadImages(List List) throws DropboxException, FileNotFoundException {
-        if(List.size() <= 5) {
-            while (List.iterator().hasNext()) {
-                String filePath = (String) List.iterator().next();
-                File file = new File(filePath);
-                FileInputStream inputStream = new FileInputStream(file);
-                DropboxAPI.Entry response = mDBApi.putFile("/magnum-opus.txt", inputStream,
-                        file.length(), null, null);
-                Log.i("DbExampleLog", "The uploaded file's rev is: " + response.rev + filePath);
 
+    // ################ Dropbox Async + Background Upload #####################
+    private class UploadFile extends AsyncTask<String, Long, Boolean> {
+
+        private String mPath;
+        private String[] filePathList;
+        private long mFileLen;
+        private ProgressDialog mDialog;
+        final static private String ACCOUNT_PREFS_NAME = "prefs";
+        private int flag;
+
+        private String mErrorMsg;
+        private String appDirectoryName = "LogiXS/LogiPiXS/";
+
+        public UploadFile() {
+            flag = 2;
+            mDialog = new ProgressDialog(context); // CONTEXT?!?!
+            mDialog.setMax(dbList.size());
+            mDialog.setMessage("Uploading...");
+            mDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            mDialog.setCancelable(false);
+            mDialog.setProgress(0);
+            mDialog.show();
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Boolean doInBackground(String... params) {
+            try {
+                for (int j = 0; j < dbList.size(); j++) {
+                    FileInputStream fis;
+                    //String currPath = this.filePathList[j];
+                    String mFilePath;
+                    mFilePath = params[j];
+                    publishProgress(Long.parseLong("" + j));
+                    File mFile = new File(mFilePath);
+                    fis = new FileInputStream(mFile);
+                    DropboxAPI.Entry response = mDBApi.putFile(appDirectoryName + imageCounter + "_" + getFileName(), fis, mFile.length(), null, null);
+                    Log.i("Log for the Upload", "File Number: " + j);
+                }
+                imageCounter = 0;
+                clearDbList();
+                return true;
+
+            } catch (DropboxUnlinkedException e) {
+                // This session wasn't authenticated properly or user unlinked
+                mErrorMsg = "This app wasn't authenticated properly.";
+            } catch (DropboxFileSizeException e) {
+                // File size too big to upload via the API
+                mErrorMsg = "This file is too big to upload";
+            } catch (DropboxPartialFileException e) {
+                // We canceled the operation
+                mErrorMsg = "Upload canceled";
+            } catch (DropboxServerException e) {
+                // Server-side exception. These are examples of what could happen,
+                // but we don't do anything special with them here.
+                mErrorMsg = "1";
+                if (e.error == DropboxServerException._401_UNAUTHORIZED) {
+                    // Unauthorized, so we should unlink them. You may want to
+                    // automatically log the user out in this case.
+                    mErrorMsg = "2";
+                } else if (e.error == DropboxServerException._403_FORBIDDEN) {
+                    // Not allowed to access this
+                    mErrorMsg = "3";
+                } else if (e.error == DropboxServerException._404_NOT_FOUND) {
+                    // path not found (or if it was the thumbnail, can't be
+                    // thumbnailed)
+                    mErrorMsg = "4";
+                } else if (e.error == DropboxServerException._507_INSUFFICIENT_STORAGE) {
+                    // user is over quota
+                    mErrorMsg = "5";
+                } else {
+                    // Something else
+                    mErrorMsg = "6";
+                }
+                // This gets the Dropbox error, translated into the user's language
+                mErrorMsg = e.body.userError;
+                if (mErrorMsg == null) {
+                    mErrorMsg = e.body.error;
+                }
+            } catch (DropboxIOException e) {
+                e.printStackTrace();
+                // Happens all the time, probably want to retry automatically.
+                mErrorMsg = "Network error.  Try again.";
+            } catch (DropboxParseException e) {
+                // Probably due to Dropbox server restarting, should retry
+                mErrorMsg = "Dropbox error.  Try again.";
+            } catch (DropboxException e) {
+                // Unknown error
+                mErrorMsg = "Unknown error.  Try again.";
+            } catch (FileNotFoundException e) {
+                mErrorMsg = "7";
+            }
+            return false;
+        }
+
+        @Override
+        protected void onProgressUpdate(Long... progress) {
+            if (flag == 1) {
+                int percent = (int) (100.0 * (double) progress[0] / mFileLen + 0.5);
+                mDialog.setProgress(percent);
+            } else if (flag == 2) {
+                mDialog.setProgress(Integer.parseInt("" + progress[0]));
+                super.onProgressUpdate(progress);
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+            mDialog.dismiss();
+            if (result) {
+                Toast.makeText(context,"Successfully uploaded", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(context,mErrorMsg,Toast.LENGTH_SHORT).show();
             }
         }
     }

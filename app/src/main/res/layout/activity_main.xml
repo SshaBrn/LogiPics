@@ -28,24 +28,24 @@
         android:layout_height="50dp"
         android:background="@color/color1"
         android:textColor="@color/white"
-        android:id="@+id/btnPrint"
-        android:onClick="btnPrintOnClick"
-        android:text="View cached Images"/>
+        android:id="@+id/btnUpload"
+        android:onClick="btnUploadOnClick"
+        android:text="Upload"/>
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:background="@color/color1"
+        android:background="@color/color4"
         android:textColor="@color/white"
-        android:id="@+id/btnUpload"
-        android:onClick="btnUploadOnClick"
-        android:text="Upload"/>
+        android:id="@+id/btnAuth"
+        android:onClick="btnStartAuth"
+        android:text="Dropbox Auth."/>
 
     <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/main_list_view"
-        android:cacheColorHint="@color/color1">
+        android:cacheColorHint="@color/color3">
     </ListView>
 
 </LinearLayout>
