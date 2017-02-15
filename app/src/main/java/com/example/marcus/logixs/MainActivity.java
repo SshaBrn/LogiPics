@@ -58,6 +58,7 @@ public class MainActivity extends ActionBarActivity {
     private MainActivity context;
     private String[] pathArray;
     private int imageCounter;
+    public String fileName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -156,23 +157,15 @@ public class MainActivity extends ActionBarActivity {
     // DROPBOX Upload Button Event Listener
     public void btnUploadOnClick(View view) {
 
-        int listSize = dbList.size();
-        Log.d("ListSize ", "SIZE: " + listSize);
-        //pathArray = new String[2];
-        int i = 0;
-        String pathArrayString = (String) dbList.iterator().next();
-        /*
-        while(dbList.iterator().hasNext()){
-            pathArray[i] = (String) dbList.iterator().next();
-            i++;
-        }*/
-            //UploadFile UpFile = new UploadFile(pathArray);
-            new UploadFile().execute(pathArrayString);
-            //UpFile.execute(pathArray);
+        pathArray = new String[dbList.size()];
 
-        //else {
-            //Toast.makeText(context,"Bitte genau 2 Bilder!", Toast.LENGTH_SHORT).show();
-        //}
+        for(int y = 0; y < dbList.size(); y++) {
+            pathArray[y] = (String) dbList.iterator().next();
+        }
+        Log.i("Content", "" + pathArray[0]);
+        Log.i("Content", "" + pathArray[1]);
+
+        new UploadFile().execute(pathArray);
     }
 
     // DROPBOX AUTH Button Listener
@@ -190,7 +183,7 @@ public class MainActivity extends ActionBarActivity {
             Date date = Calendar.getInstance().getTime();
             DateFormat formatter = new SimpleDateFormat("ddMMyyyyHH:mm");
             String today = formatter.format(date);
-            String fileName = today + ".jpg";
+            fileName = today + ".jpg";
             ContentValues values = new ContentValues();
             values.put(MediaStore.Images.Media.TITLE, fileName);
             mCapturedImageURI = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
@@ -225,8 +218,7 @@ public class MainActivity extends ActionBarActivity {
                     image.setDescription("Ganz ruhig Saschi, is nur n Test");
                     image.setDatetime(System.currentTimeMillis());
                     image.setPath(picturePath);
-                    if(dbList.size() <= 5){
-                        dbList.add(picturePath);}
+                    dbList.add(picturePath);
                     images.add(image);
                 }
             case REQUEST_IMAGE_CAPTURE:
@@ -242,8 +234,7 @@ public class MainActivity extends ActionBarActivity {
                     image.setDescription("Ganz ruhig Saschi, is nur n Test");
                     image.setDatetime(System.currentTimeMillis());
                     image.setPath(picturePath);
-                    if(dbList.size() <= 5){
-                        dbList.add(picturePath);}
+                    dbList.add(picturePath);
                     images.add(image);
                 }
         }
@@ -283,14 +274,6 @@ public class MainActivity extends ActionBarActivity {
     public void clearDbList(){
         dbList.clear();
     }
-    // GET FileName
-    public String getFileName(){
-        Date date = Calendar.getInstance().getTime();
-        DateFormat formatter = new SimpleDateFormat("ddMMyyyyHH:mm");
-        String today = formatter.format(date);
-        String fileName = today + ".jpg";
-        return fileName;
-    }
 
     // ------------------------ END ----------------------------------
 
@@ -312,19 +295,21 @@ public class MainActivity extends ActionBarActivity {
     // ################ Dropbox Async + Background Upload #####################
     private class UploadFile extends AsyncTask<String, Long, Boolean> {
 
-        private String mPath;
-        private String[] filePathList;
         private long mFileLen;
         private ProgressDialog mDialog;
-        final static private String ACCOUNT_PREFS_NAME = "prefs";
         private int flag;
-
         private String mErrorMsg;
         private String appDirectoryName = "LogiXS/LogiPiXS/";
+        //final static private String ACCOUNT_PREFS_NAME = "prefs";
 
         public UploadFile() {
             flag = 2;
-            mDialog = new ProgressDialog(context); // CONTEXT?!?!
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mDialog = new ProgressDialog(context);
             mDialog.setMax(dbList.size());
             mDialog.setMessage("Uploading...");
             mDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
@@ -334,23 +319,22 @@ public class MainActivity extends ActionBarActivity {
         }
 
         @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
         protected Boolean doInBackground(String... params) {
             try {
-                for (int j = 0; j < dbList.size(); j++) {
+                String mFilePath;
+
+                for (int j = 0; j < params.length; j++) {
+                    Log.i("Params Content", "" + params[0]);
+                    Log.i("Params Content", "" + params[1]);
+
                     FileInputStream fis;
-                    //String currPath = this.filePathList[j];
-                    String mFilePath;
+                    int imgUploadCounter = j + 1;
                     mFilePath = params[j];
                     publishProgress(Long.parseLong("" + j));
                     File mFile = new File(mFilePath);
                     fis = new FileInputStream(mFile);
-                    DropboxAPI.Entry response = mDBApi.putFile(appDirectoryName + imageCounter + "_" + getFileName(), fis, mFile.length(), null, null);
-                    Log.i("Log for the Upload", "File Number: " + j);
+                    DropboxAPI.Entry response = mDBApi.putFile(appDirectoryName + imgUploadCounter + "_" + fileName, fis, mFile.length(), null, null);
+                    Log.i("Number of Upload", "" + j);
                 }
                 imageCounter = 0;
                 clearDbList();
