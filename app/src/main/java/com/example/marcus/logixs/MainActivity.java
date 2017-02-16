@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 public class MainActivity extends ActionBarActivity {
@@ -48,10 +49,9 @@ public class MainActivity extends ActionBarActivity {
     final static private String APP_SECRET = "hw0iu6nunu44gvc";
     private DropboxAPI<AndroidAuthSession> mDBApi;
     private ArrayList<MyImage> images;
-    private List dbList;
+    private ArrayList<String> dbList;
     private ImageAdapter imageAdapter;
     private ListView listView;
-    private TextView printList;
     private Uri mCapturedImageURI;
     private static final int RESULT_LOAD_IMAGE = 1;
     private static final int REQUEST_IMAGE_CAPTURE = 2;
@@ -79,7 +79,7 @@ public class MainActivity extends ActionBarActivity {
         listView = (ListView) findViewById(R.id.main_list_view);
         listView.setAdapter(imageAdapter);
         // Path List for Dropbox
-        dbList = Collections.synchronizedList(new ArrayList());
+        dbList = new ArrayList();
     }
 
 
@@ -156,14 +156,19 @@ public class MainActivity extends ActionBarActivity {
 
     // DROPBOX Upload Button Event Listener
     public void btnUploadOnClick(View view) {
+        String testString1 = dbList.iterator().next();
+        String testString2 = dbList.iterator().next();
+        Log.i("Content BEFORE passing", "ITERATOR.NEXT CONTENT" + testString1);
+        Log.i("Content BEFORE passing", "ITERATOR.NEXT CONTENT" + testString2);
 
         pathArray = new String[dbList.size()];
-
-        for(int y = 0; y < dbList.size(); y++) {
-            pathArray[y] = (String) dbList.iterator().next();
+        int i = 0;
+        for (String path : dbList){
+            pathArray[i] = path;
+            i++;
         }
-        Log.i("Content", "" + pathArray[0]);
-        Log.i("Content", "" + pathArray[1]);
+        Log.i("Content passing", "" + pathArray[0]);
+        Log.i("Content passing", "" + pathArray[1]);
 
         new UploadFile().execute(pathArray);
     }
@@ -172,7 +177,6 @@ public class MainActivity extends ActionBarActivity {
     public void btnStartAuth(View view){
         mDBApi.getSession().startOAuth2Authentication(MainActivity.this);
     }
-
 
     // END BTN LISTENER
 
@@ -219,6 +223,7 @@ public class MainActivity extends ActionBarActivity {
                     image.setDatetime(System.currentTimeMillis());
                     image.setPath(picturePath);
                     dbList.add(picturePath);
+                    Log.i("Content init", "" + picturePath);
                     images.add(image);
                 }
             case REQUEST_IMAGE_CAPTURE:
@@ -235,6 +240,7 @@ public class MainActivity extends ActionBarActivity {
                     image.setDatetime(System.currentTimeMillis());
                     image.setPath(picturePath);
                     dbList.add(picturePath);
+                    Log.i("Content init", "" + picturePath);
                     images.add(image);
                 }
         }
@@ -322,20 +328,22 @@ public class MainActivity extends ActionBarActivity {
         protected Boolean doInBackground(String... params) {
             try {
                 String mFilePath;
-
+                int imgUploadCounter = 1;
+                int imgUploadCounterLog;
                 for (int j = 0; j < params.length; j++) {
-                    Log.i("Params Content", "" + params[0]);
-                    Log.i("Params Content", "" + params[1]);
+                    Log.i("Content before Upload", "" + params[0]);
+                    Log.i("Content before Upload", "" + params[1]);
 
                     FileInputStream fis;
-                    int imgUploadCounter = j + 1;
                     mFilePath = params[j];
                     publishProgress(Long.parseLong("" + j));
                     File mFile = new File(mFilePath);
                     fis = new FileInputStream(mFile);
                     DropboxAPI.Entry response = mDBApi.putFile(appDirectoryName + imgUploadCounter + "_" + fileName, fis, mFile.length(), null, null);
-                    Log.i("Number of Upload", "" + j);
+                    imgUploadCounter++;
                 }
+                imgUploadCounterLog = imgUploadCounter-1;
+                Log.i("Number of Uploads", "" + imgUploadCounterLog);
                 imageCounter = 0;
                 clearDbList();
                 return true;
