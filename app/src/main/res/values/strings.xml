@@ -4,4 +4,7 @@
     <string name="add_image">Add Image</string>
     <string name="title_activity_display_image">Display Image</string>
     <string name="image_information">Image Information</string>
+    <string name="ic_camera">Take Photo</string>
+    <string name="ic_key">Authentication</string>
+    <string name="ic_upload">Upload</string>
 </resources>

@@ -85,28 +85,64 @@ public class MainActivity extends ActionBarActivity {
 
     // START BTN LISTENER
 
-    // Add Image Button Listener
-    public void btnAddOnClick(View view) {
-        final Dialog dialog = new Dialog(this);
-        dialog.setContentView(R.layout.custom_dialog_box);
-        dialog.setTitle("Decide");
-        Button btnExit = (Button) dialog.findViewById(R.id.btnExit);
-        btnExit.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                dialog.dismiss();
-            }
-        });
-        dialog.findViewById(R.id.btnChoosePath).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                activeGallery();
-            }
-        });
-        dialog.findViewById(R.id.btnTakePhoto).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                activeTakePhoto();
-            }
-        });
-        dialog.show();
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                // User chose the "Settings" item, show the app settings UI...
+                return true;
+
+            case R.id.action_auth:
+                mDBApi.getSession().startOAuth2Authentication(MainActivity.this);
+                return true;
+
+            case R.id.action_camera:
+                final Dialog dialog = new Dialog(this);
+                dialog.setContentView(R.layout.custom_dialog_box);
+                dialog.setTitle("Decide");
+                Button btnExit = (Button) dialog.findViewById(R.id.btnExit);
+                btnExit.setOnClickListener(new View.OnClickListener() {
+                    @Override public void onClick(View v) {
+                        dialog.dismiss();
+                    }
+                });
+                dialog.findViewById(R.id.btnChoosePath).setOnClickListener(new View.OnClickListener() {
+                    @Override public void onClick(View v) {
+                        activeGallery();
+                    }
+                });
+                dialog.findViewById(R.id.btnTakePhoto).setOnClickListener(new View.OnClickListener() {
+                    @Override public void onClick(View v) {
+                        activeTakePhoto();
+                    }
+                });
+                dialog.show();
+                return true;
+
+            case R.id.action_upload:
+                pathArray = new String[dbList.size()];
+                int i = 0;
+                for (String path : dbList){
+                    pathArray[i] = path;
+                    i++;
+                }
+                Log.i("Content passing", "" + pathArray[0]);
+                Log.i("Content passing", "" + pathArray[1]);
+
+                new UploadFile().execute(pathArray);
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     // Edit Buttons EventListener
@@ -152,30 +188,6 @@ public class MainActivity extends ActionBarActivity {
                 Editdialog.dismiss();
             }});
         Editdialog.show();
-    }
-
-    // DROPBOX Upload Button Event Listener
-    public void btnUploadOnClick(View view) {
-        String testString1 = dbList.iterator().next();
-        String testString2 = dbList.iterator().next();
-        Log.i("Content BEFORE passing", "ITERATOR.NEXT CONTENT" + testString1);
-        Log.i("Content BEFORE passing", "ITERATOR.NEXT CONTENT" + testString2);
-
-        pathArray = new String[dbList.size()];
-        int i = 0;
-        for (String path : dbList){
-            pathArray[i] = path;
-            i++;
-        }
-        Log.i("Content passing", "" + pathArray[0]);
-        Log.i("Content passing", "" + pathArray[1]);
-
-        new UploadFile().execute(pathArray);
-    }
-
-    // DROPBOX AUTH Button Listener
-    public void btnStartAuth(View view){
-        mDBApi.getSession().startOAuth2Authentication(MainActivity.this);
     }
 
     // END BTN LISTENER
@@ -246,27 +258,6 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
     // Edit ImageArray/dbList - Delete all / index
     // TODO: Index Delete | ViewHolder Image Delete etc.
     public void editDbList(int ArrayIndex){
@@ -305,7 +296,7 @@ public class MainActivity extends ActionBarActivity {
         private ProgressDialog mDialog;
         private int flag;
         private String mErrorMsg;
-        private String appDirectoryName = "LogiXS/LogiPiXS/";
+        final private String appDirectoryName = "LogiXS/LogiPiXS/";
         //final static private String ACCOUNT_PREFS_NAME = "prefs";
 
         public UploadFile() {
