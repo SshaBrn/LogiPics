@@ -135,7 +135,6 @@ public class MainActivity extends ActionBarActivity {
                     i++;
                 }
                 Log.i("Content passing", "" + pathArray[0]);
-                Log.i("Content passing", "" + pathArray[1]);
 
                 new UploadFile().execute(pathArray);
                 return true;
@@ -276,7 +275,6 @@ public class MainActivity extends ActionBarActivity {
 
     // ------------------------ END ----------------------------------
 
-    // DROPBOX Resume Function after Auth. Comeback
     protected void onResume() {
         super.onResume();
 
@@ -325,7 +323,6 @@ public class MainActivity extends ActionBarActivity {
                 int imgUploadCounterLog;
                 for (int j = 0; j < params.length; j++) {
                     Log.i("Content before Upload", "" + params[0]);
-                    Log.i("Content before Upload", "" + params[1]);
 
                     FileInputStream fis;
                     mFilePath = params[j];
