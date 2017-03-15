@@ -231,12 +231,14 @@ public class MainActivity extends ActionBarActivity {
                     MyImage image = new MyImage();
                     image.setTitle("" + imageCounter);
                     imageCounter++;
-                    image.setDescription("Ganz ruhig Saschi, is nur n Test");
+                    image.setDescription("Test");
                     image.setDatetime(System.currentTimeMillis());
                     image.setPath(picturePath);
                     dbList.add(picturePath);
                     Log.i("Content init", "" + picturePath);
                     images.add(image);
+                    // TEST
+                    imageAdapter.notifyDataSetChanged();
                 }
             case REQUEST_IMAGE_CAPTURE:
                 if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
@@ -248,12 +250,14 @@ public class MainActivity extends ActionBarActivity {
                     MyImage image = new MyImage();
                     image.setTitle("" + imageCounter);
                     imageCounter++;
-                    image.setDescription("Ganz ruhig Saschi, is nur n Test");
+                    image.setDescription("Test");
                     image.setDatetime(System.currentTimeMillis());
                     image.setPath(picturePath);
                     dbList.add(picturePath);
                     Log.i("Content init", "" + picturePath);
                     images.add(image);
+                    // TEST
+                    imageAdapter.notifyDataSetChanged();
                 }
         }
     }
@@ -404,6 +408,10 @@ public class MainActivity extends ActionBarActivity {
 
         @Override
         protected void onPostExecute(Boolean result) {
+            // TEST
+            images.clear();
+            imageAdapter.notifyDataSetChanged();
+            // ---
             mDialog.dismiss();
             if (result) {
                 Toast.makeText(context,"Successfully uploaded", Toast.LENGTH_SHORT).show();
