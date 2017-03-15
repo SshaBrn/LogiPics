@@ -237,7 +237,6 @@ public class MainActivity extends ActionBarActivity {
                     dbList.add(picturePath);
                     Log.i("Content init", "" + picturePath);
                     images.add(image);
-                    // TEST
                     imageAdapter.notifyDataSetChanged();
                 }
             case REQUEST_IMAGE_CAPTURE:
@@ -256,7 +255,6 @@ public class MainActivity extends ActionBarActivity {
                     dbList.add(picturePath);
                     Log.i("Content init", "" + picturePath);
                     images.add(image);
-                    // TEST
                     imageAdapter.notifyDataSetChanged();
                 }
         }
@@ -340,7 +338,6 @@ public class MainActivity extends ActionBarActivity {
                 imgUploadCounterLog = imgUploadCounter-1;
                 Log.i("Number of Uploads", "" + imgUploadCounterLog);
                 imageCounter = 0;
-                clearDbList();
                 return true;
 
             } catch (DropboxUnlinkedException e) {
@@ -408,10 +405,9 @@ public class MainActivity extends ActionBarActivity {
 
         @Override
         protected void onPostExecute(Boolean result) {
-            // TEST
             images.clear();
+            clearDbList();
             imageAdapter.notifyDataSetChanged();
-            // ---
             mDialog.dismiss();
             if (result) {
                 Toast.makeText(context,"Successfully uploaded", Toast.LENGTH_SHORT).show();
