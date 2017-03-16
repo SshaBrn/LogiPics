@@ -37,7 +37,6 @@ import com.dropbox.client2.session.AppKeyPair;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Image;
-import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.pdf.PdfWriter;
 
 
@@ -180,24 +179,23 @@ public class MainActivity extends ActionBarActivity {
     // Function to Convert Picture to PDF and execute the Upload
     public void convertPDF(View view){
         PDFList = new ArrayList();
-        //TODO: QUALITY OF IMG IN PDF
         try {
             for (String picPath : dbList) {
                 Bitmap bmp = BitmapFactory.decodeFile(picPath);
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream);
 
                 Document document = new Document();
                 File f = new File(Environment.getExternalStorageDirectory(), "TEST.pdf");
                 PdfWriter.getInstance(document, new FileOutputStream(f));
-                document.open();
-                //document.add(new Paragraph("PDF TEST"));
 
+                document.open();
                 String pathTest = f.getAbsolutePath();
                 PDFList.add(pathTest);
-
                 Image image = Image.getInstance(stream.toByteArray());
-                image.scalePercent(100f);
+                float scaler = ((document.getPageSize().getWidth() - document.leftMargin()
+                        - document.rightMargin()) / image.getWidth()) * 100;
+                image.scalePercent(scaler);
                 document.add(image);
                 document.close();
             }
@@ -213,7 +211,6 @@ public class MainActivity extends ActionBarActivity {
         }
 
         pdfPic = ".pdf";
-
         pdfArray = new String[PDFList.size()];
         int i = 0;
         for (String path : PDFList){
@@ -221,7 +218,6 @@ public class MainActivity extends ActionBarActivity {
             i++;
         }
         Log.i("Content passing", "" + pdfArray[0]);
-
         new UploadFile().execute(pdfArray);
     }
 
@@ -258,7 +254,6 @@ public class MainActivity extends ActionBarActivity {
         Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(intent, RESULT_LOAD_IMAGE);
     }
-
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -443,6 +438,7 @@ public class MainActivity extends ActionBarActivity {
         protected void onPostExecute(Boolean result) {
             images.clear();
             clearDbList();
+            PDFList.clear();
             imageAdapter.notifyDataSetChanged();
             mDialog.dismiss();
             if (result) {
