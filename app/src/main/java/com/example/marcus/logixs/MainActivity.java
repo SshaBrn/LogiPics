@@ -56,6 +56,7 @@ public class MainActivity extends ActionBarActivity {
 
     final static private String APP_KEY = "4ascir3u867s00m";
     final static private String APP_SECRET = "hw0iu6nunu44gvc";
+    public Dialog dialogUpload;
     private DropboxAPI<AndroidAuthSession> mDBApi;
     private ArrayList<MyImage> images;
     private ArrayList<String> dbList;
@@ -95,8 +96,6 @@ public class MainActivity extends ActionBarActivity {
         // Path List for Dropbox
         dbList = new ArrayList();
 
-
-        // TEST Listener
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> a, View v, int position, long id) {
                 AlertDialog.Builder adb = new AlertDialog.Builder(MainActivity.this);
@@ -158,7 +157,7 @@ public class MainActivity extends ActionBarActivity {
                 return true;
 
             case R.id.action_upload:
-                final Dialog dialogUpload = new Dialog(this);
+                dialogUpload = new Dialog(this);
                 dialogUpload.setContentView(R.layout.custom_dialog_upload_box);
                 dialogUpload.setTitle("Decide");
                 Button btnExit3 = (Button) dialogUpload.findViewById(R.id.btnExit3);
@@ -219,6 +218,7 @@ public class MainActivity extends ActionBarActivity {
         }
         Log.i("Content passing", "" + pdfArray[0]);
         new UploadFile().execute(pdfArray);
+        dialogUpload.dismiss();
     }
 
     public void uploadPictures(View view){
@@ -231,6 +231,7 @@ public class MainActivity extends ActionBarActivity {
         }
         Log.i("Content passing", "" + pathArray[0]);
         new UploadFile().execute(pathArray);
+        dialogUpload.dismiss();
     }
 
     // take a photo
@@ -306,7 +307,6 @@ public class MainActivity extends ActionBarActivity {
 
     protected void onResume() {
         super.onResume();
-
         if (mDBApi.getSession().authenticationSuccessful()) {
             try {
                 // Required to complete auth, sets the access token on the session

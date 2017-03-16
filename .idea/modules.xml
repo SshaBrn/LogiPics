@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/LogiXS.iml" filepath="$PROJECT_DIR$/LogiXS.iml" />
+      <module fileurl="file://$PROJECT_DIR$/LogiPics.iml" filepath="$PROJECT_DIR$/LogiPics.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
