@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AlertDialog;
@@ -34,6 +35,7 @@ import com.dropbox.client2.exception.DropboxPartialFileException;
 import com.dropbox.client2.exception.DropboxServerException;
 import com.dropbox.client2.exception.DropboxUnlinkedException;
 import com.dropbox.client2.session.AppKeyPair;
+import com.itextpdf.text.BadElementException;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Image;
@@ -51,6 +53,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+
+import static android.R.attr.start;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -79,8 +83,6 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        //Test Context
         context = this;
         //Dropbox
         AppKeyPair appKeys = new AppKeyPair(APP_KEY, APP_SECRET);
@@ -178,36 +180,43 @@ public class MainActivity extends ActionBarActivity {
     // Function to Convert Picture to PDF and execute the Upload
     public void convertPDF(View view){
         PDFList = new ArrayList();
-        try {
-            for (String picPath : dbList) {
-                Bitmap bmp = BitmapFactory.decodeFile(picPath);
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream);
 
-                Document document = new Document();
-                File f = new File(Environment.getExternalStorageDirectory(), "TEST.pdf");
-                PdfWriter.getInstance(document, new FileOutputStream(f));
-
-                document.open();
-                String pathTest = f.getAbsolutePath();
-                PDFList.add(pathTest);
-                Image image = Image.getInstance(stream.toByteArray());
-                float scaler = ((document.getPageSize().getWidth() - document.leftMargin()
-                        - document.rightMargin()) / image.getWidth()) * 100;
-                image.scalePercent(scaler);
-                document.add(image);
-                document.close();
-            }
-        }
-        catch(FileNotFoundException e){
-            // BLABLA
-        }
-        catch(DocumentException e){
-            // JAJAVEVE
-        }
-        catch (IOException e){
-            // AHA
-        }
+            new Thread( new Runnable(){ public void run(){
+                Looper.prepare();
+                for (String picPath : dbList) {
+                    Bitmap bmp = BitmapFactory.decodeFile(picPath);
+                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                    bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                    Document document = new Document();
+                    File f = new File(Environment.getExternalStorageDirectory(), "TEST.pdf");
+                    try {
+                        PdfWriter.getInstance(document, new FileOutputStream(f));
+                    } catch (DocumentException e) {
+                        e.printStackTrace();
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    document.open();
+                    String pathTest = f.getAbsolutePath();
+                    PDFList.add(pathTest);
+                    Image image = null;
+                    try {
+                        image = Image.getInstance(stream.toByteArray());
+                    } catch (BadElementException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    float scaler = ((document.getPageSize().getWidth() - document.leftMargin()
+                            - document.rightMargin()) / image.getWidth()) * 100;
+                    image.scalePercent(scaler);
+                    try {
+                        document.add(image);
+                    } catch (DocumentException e) {
+                        e.printStackTrace();
+                    }
+                    document.close();
+                }
 
         pdfPic = ".pdf";
         pdfArray = new String[PDFList.size()];
@@ -216,9 +225,11 @@ public class MainActivity extends ActionBarActivity {
             pdfArray[i] = path;
             i++;
         }
+        dialogUpload.dismiss();
         Log.i("Content passing", "" + pdfArray[0]);
         new UploadFile().execute(pdfArray);
-        dialogUpload.dismiss();
+            }}).start();
+
     }
 
     public void uploadPictures(View view){
@@ -230,8 +241,8 @@ public class MainActivity extends ActionBarActivity {
             i++;
         }
         Log.i("Content passing", "" + pathArray[0]);
-        new UploadFile().execute(pathArray);
         dialogUpload.dismiss();
+        new UploadFile().execute(pathArray);
     }
 
     // take a photo
