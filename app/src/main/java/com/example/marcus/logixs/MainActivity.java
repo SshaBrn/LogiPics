@@ -3,21 +3,25 @@ package com.example.marcus.logixs;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dropbox.client2.DropboxAPI;
@@ -30,18 +34,24 @@ import com.dropbox.client2.exception.DropboxPartialFileException;
 import com.dropbox.client2.exception.DropboxServerException;
 import com.dropbox.client2.exception.DropboxUnlinkedException;
 import com.dropbox.client2.session.AppKeyPair;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Image;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.PdfWriter;
 
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -50,6 +60,7 @@ public class MainActivity extends ActionBarActivity {
     private DropboxAPI<AndroidAuthSession> mDBApi;
     private ArrayList<MyImage> images;
     private ArrayList<String> dbList;
+    private ArrayList<String> PDFList;
     private ImageAdapter imageAdapter;
     private ListView listView;
     private Uri mCapturedImageURI;
@@ -57,8 +68,12 @@ public class MainActivity extends ActionBarActivity {
     private static final int REQUEST_IMAGE_CAPTURE = 2;
     private MainActivity context;
     private String[] pathArray;
+    private String[] pdfArray;
     private int imageCounter;
     public String fileName;
+    public String fileNameTakenPhoto;
+    public String pdfPic;
+    private AlertDialog x;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,10 +95,26 @@ public class MainActivity extends ActionBarActivity {
         listView.setAdapter(imageAdapter);
         // Path List for Dropbox
         dbList = new ArrayList();
+
+
+        // TEST Listener
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> a, View v, int position, long id) {
+                AlertDialog.Builder adb = new AlertDialog.Builder(MainActivity.this);
+                adb.setTitle("Delete?");
+                adb.setMessage("Are you sure you want to delete? ");
+                final int positionToRemove = position;
+                adb.setNegativeButton("Cancel", null);
+                adb.setPositiveButton("Ok", new AlertDialog.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        images.remove(positionToRemove);
+                        dbList.remove(positionToRemove);
+                        imageAdapter.notifyDataSetChanged();
+                    }});
+                adb.show();
+            }
+        });
     }
-
-
-    // START BTN LISTENER
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -128,15 +159,17 @@ public class MainActivity extends ActionBarActivity {
                 return true;
 
             case R.id.action_upload:
-                pathArray = new String[dbList.size()];
-                int i = 0;
-                for (String path : dbList){
-                    pathArray[i] = path;
-                    i++;
-                }
-                Log.i("Content passing", "" + pathArray[0]);
+                final Dialog dialogUpload = new Dialog(this);
+                dialogUpload.setContentView(R.layout.custom_dialog_upload_box);
+                dialogUpload.setTitle("Decide");
+                Button btnExit3 = (Button) dialogUpload.findViewById(R.id.btnExit3);
+                btnExit3.setOnClickListener(new View.OnClickListener() {
+                    @Override public void onClick(View v) {
+                        dialogUpload.dismiss();
+                    }
+                });
 
-                new UploadFile().execute(pathArray);
+                dialogUpload.show();
                 return true;
 
             default:
@@ -144,52 +177,65 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
-    // Edit Buttons EventListener
-    public void btnEditOnClick(View view){
-        final Dialog Editdialog = new Dialog(this);
-        Editdialog.setContentView(R.layout.custom_edit_box);
-        Editdialog.setTitle("Decide");
-        Button btnExit1 = (Button) Editdialog.findViewById(R.id.btnExit1);
-        btnExit1.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                Editdialog.dismiss();
+    // Function to Convert Picture to PDF and execute the Upload
+    public void convertPDF(View view){
+        PDFList = new ArrayList();
+        //TODO: QUALITY OF IMG IN PDF
+        try {
+            for (String picPath : dbList) {
+                Bitmap bmp = BitmapFactory.decodeFile(picPath);
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
+
+                Document document = new Document();
+                File f = new File(Environment.getExternalStorageDirectory(), "TEST.pdf");
+                PdfWriter.getInstance(document, new FileOutputStream(f));
+                document.open();
+                //document.add(new Paragraph("PDF TEST"));
+
+                String pathTest = f.getAbsolutePath();
+                PDFList.add(pathTest);
+
+                Image image = Image.getInstance(stream.toByteArray());
+                image.scalePercent(100f);
+                document.add(image);
+                document.close();
             }
-        });
-        Editdialog.findViewById(R.id.btnDel0).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                editDbList(0);
-            }});
-        Editdialog.findViewById(R.id.btnDel1).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                editDbList(1);
-            }});
-        Editdialog.findViewById(R.id.btnDel2).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                editDbList(2);
-            }});
-        Editdialog.findViewById(R.id.btnDel3).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                editDbList(3);
-            }});
-        Editdialog.findViewById(R.id.btnDel3).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                editDbList(3);
-            }});
-        Editdialog.findViewById(R.id.btnDel4).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                //TODO: REFACTOR - ITS CRASHING IF INDEX IS 0 FOR EXAMPLE
-                int lastItem = dbList.size()-1;
-                editDbList(lastItem);
-            }});
-        Editdialog.findViewById(R.id.btnClear).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                clearDbList();
-                Editdialog.dismiss();
-            }});
-        Editdialog.show();
+        }
+        catch(FileNotFoundException e){
+            // BLABLA
+        }
+        catch(DocumentException e){
+            // JAJAVEVE
+        }
+        catch (IOException e){
+            // AHA
+        }
+
+        pdfPic = ".pdf";
+
+        pdfArray = new String[PDFList.size()];
+        int i = 0;
+        for (String path : PDFList){
+            pdfArray[i] = path;
+            i++;
+        }
+        Log.i("Content passing", "" + pdfArray[0]);
+
+        new UploadFile().execute(pdfArray);
     }
 
-    // END BTN LISTENER
+    public void uploadPictures(View view){
+        pathArray = new String[dbList.size()];
+        pdfPic = ".jpg";
+        int i = 0;
+        for (String path : dbList){
+            pathArray[i] = path;
+            i++;
+        }
+        Log.i("Content passing", "" + pathArray[0]);
+        new UploadFile().execute(pathArray);
+    }
 
     // take a photo
     private void activeTakePhoto() {
@@ -198,7 +244,7 @@ public class MainActivity extends ActionBarActivity {
             Date date = Calendar.getInstance().getTime();
             DateFormat formatter = new SimpleDateFormat("ddMMyyyyHH:mm");
             String today = formatter.format(date);
-            fileName = today + ".jpg";
+            fileNameTakenPhoto = today + ".jpg";
             ContentValues values = new ContentValues();
             values.put(MediaStore.Images.Media.TITLE, fileName);
             mCapturedImageURI = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
@@ -213,7 +259,7 @@ public class MainActivity extends ActionBarActivity {
         startActivityForResult(intent, RESULT_LOAD_IMAGE);
     }
 
-    // ResultTask Load Image | Take Image
+
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
@@ -226,7 +272,6 @@ public class MainActivity extends ActionBarActivity {
                     int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
                     String picturePath = cursor.getString(columnIndex);
                     cursor.close();
-                    //TODO: TESTEN!
                     MyImage image = new MyImage();
                     image.setTitle("" + imageCounter);
                     imageCounter++;
@@ -259,21 +304,10 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
-    // Edit ImageArray/dbList - Delete all / index
-    // TODO: Index Delete | ViewHolder Image Delete etc.
-    public void editDbList(int ArrayIndex){
-        if(dbList != null)
-            dbList.remove(ArrayIndex);
-        // TODO: images.remove(ArrayIndex); Zwecks Renderer nicht so einfach zu lösen
-    }
-
-    // ----------------- Some HelpFunctions --------------------------
     // Clear dbList after Upload
     public void clearDbList(){
         dbList.clear();
     }
-
-    // ------------------------ END ----------------------------------
 
     protected void onResume() {
         super.onResume();
@@ -321,6 +355,11 @@ public class MainActivity extends ActionBarActivity {
                 String mFilePath;
                 int imgUploadCounter = 1;
                 int imgUploadCounterLog;
+                Date date = Calendar.getInstance().getTime();
+                DateFormat formater = new SimpleDateFormat("ddMMyyyyHH:mm");
+                String data1 = formater.format(date);
+                fileName = data1;
+
                 for (int j = 0; j < params.length; j++) {
                     Log.i("Content before Upload", "" + params[0]);
 
@@ -329,7 +368,7 @@ public class MainActivity extends ActionBarActivity {
                     publishProgress(Long.parseLong("" + j));
                     File mFile = new File(mFilePath);
                     fis = new FileInputStream(mFile);
-                    DropboxAPI.Entry response = mDBApi.putFile(appDirectoryName + imgUploadCounter + "_" + fileName, fis, mFile.length(), null, null);
+                    DropboxAPI.Entry response = mDBApi.putFile(appDirectoryName + imgUploadCounter + "_" + fileName + pdfPic, fis, mFile.length(), null, null);
                     imgUploadCounter++;
                 }
                 imgUploadCounterLog = imgUploadCounter-1;

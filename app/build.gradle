@@ -27,4 +27,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.1.1'
     testCompile 'junit:junit:4.12'
     compile files('libs/dropbox-android-sdk-1.6.3.jar')
+    compile files('libs/itextpdf-5.5.10.jar')
 }

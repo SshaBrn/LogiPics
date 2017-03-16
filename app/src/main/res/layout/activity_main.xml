@@ -5,15 +5,6 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:background="@color/color1"
-        android:textColor="@color/white"
-        android:id="@+id/btnEdit"
-        android:onClick="btnEditOnClick"
-        android:text="Edit cached Images"/>
-
     <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
